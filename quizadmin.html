@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<script src="api.js"></script>
+<title>교사용 퀴즈 화면</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1F2A44;--sub:#5E6B85;--sky:#2F9BFF;--sun:#FFC83D;--mint:#2BC48A;--coral:#FF6B8A;--d:"Jua","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#F7FBFF;color:var(--ink);font:16px/1.6 "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:22px 16px 56px}
+h1,h2{font-family:var(--d);font-weight:400;margin:0}
+h1{font-size:26px;margin-bottom:16px}
+h2{font-size:20px;margin-bottom:8px}
+.box{margin-bottom:16px;padding:18px;background:#fff;border:2px solid #e3eefa;border-radius:20px}
+.box.gate{background:#DDF6EC;border-color:#DDF6EC}
+input,textarea,select{width:100%;padding:11px 14px;border:2px solid #cfe3f7;border-radius:14px;font:inherit;background:#fff}
+select{width:auto}
+textarea{min-height:90px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--sky)}
+button{padding:11px 20px;border:0;border-radius:14px;background:var(--sky);color:#fff;font-family:var(--d);font-size:17px;cursor:pointer;box-shadow:0 3px 0 #1B78D1}
+button:active{transform:translateY(2px)}
+button:disabled{opacity:.6;cursor:default}
+button.sun{background:var(--sun);color:var(--ink);box-shadow:0 3px 0 #D9A100}
+button.chip{padding:6px 14px;font-size:15px;background:#fff;color:var(--ink);border:2px solid var(--coral);box-shadow:none}
+button.chip.on{background:var(--coral);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+.note{color:var(--sub);font-size:14px;margin:4px 0}
+#msg,#makeMsg{margin-top:8px;font-weight:700;color:#E0334C}
+#makeMsg{color:#139A6A}
+#main{display:none}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{padding:14px;border-radius:18px;background:#E6F3FF;text-align:center}
+.stat:nth-child(2){background:#FFF4D1}.stat:nth-child(3){background:#DDF6EC}.stat:nth-child(4){background:#FFE3EA}
+.sv{font-family:var(--d);font-size:28px}.sl{color:var(--sub);font-size:14px}
+.brow{display:flex;align-items:center;gap:10px;margin:6px 0}
+.bl{flex:none;width:110px;font-weight:700}
+.track{flex:1;height:14px;background:#edf3fa;border-radius:99px;overflow:hidden}
+.fill{height:100%;border-radius:99px}
+.bv{flex:none;width:96px;text-align:right;font-size:14px;color:var(--sub)}
+.grp{margin:18px 0 6px;padding:7px 14px;background:var(--coral);color:#fff;border-radius:12px;font-family:var(--d);font-size:17px}
+.srow{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:8px 0;border-top:1px solid #e3eefa}
+.srow .sub{color:var(--sub);font-size:14px}
+.srow .pill{margin-left:auto;padding:2px 12px;border-radius:99px;font-family:var(--d)}
+.srow .wk{flex-basis:100%;font-size:14px;color:#B07A00}
+.it{padding:10px 0;border-top:1px solid #e3eefa}
+.it .t{font-weight:700}.it .w{color:#C62828;font-size:14px}.it .c{color:#139A6A;font-size:14px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>🎯 교사용 퀴즈 화면</h1>
+
+  <section class="box gate" id="gate">
+    <p>교사용 비밀번호를 입력해 주세요.</p>
+    <div class="row"><input type="password" id="pin" placeholder="비밀번호" style="flex:1;min-width:180px"><button id="enter">열기</button></div>
+    <div id="msg"></div>
+  </section>
+
+  <div id="main">
+    <section class="box">
+      <h2>1. 퀴즈 문항 만들기</h2>
+      <p class="note">교사용 정리 화면에서 선정한 질문이 문제가 돼요. 학생이 쓴 답이 정답이고, 오답 4개는 자동으로 만들어요.</p>
+      <p id="info"></p>
+      <label class="note">작품 설명 (선택): 줄거리와 등장인물을 적어 주면 더 그럴듯한 오답이 나와요.</label>
+      <textarea id="novel"></textarea>
+      <div class="row"><button id="makeBtn">문항 만들기·갱신</button></div>
+      <div id="makeMsg"></div>
+      <p class="note">오답이 마음에 안 들면 시트 '퀴즈문항'에서 오답1~4 칸을 직접 고쳐도 돼요.</p>
+    </section>
+
+    <section class="box">
+      <h2>2. 퀴즈 열기</h2>
+      <p id="openState"></p>
+      <div class="row"><button class="sun" id="toggle"></button></div>
+      <p class="note">학생에게 줄 퀴즈 주소 (QR로 만들어도 돼요)</p>
+      <input id="url" readonly>
+    </section>
+
+    <section>
+      <div class="row" style="margin:0 0 12px"><h2 style="margin:0">3. 퀴즈 결과</h2><button id="resBtn">결과 새로고침</button></div>
+      <div id="res"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+var STAGES = ['발단', '전개', '위기', '절정', '결말'];
+var pin = '', isOpen = false, lastRes = null, clsFilter = '전체', sortMode = 'num';
+function el(id) { return document.getElementById(id); }
+function make(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x !== undefined) n.textContent = x; return n; }
+function pct(o, t) { return t ? Math.round(o * 100 / t) : 0; }
+function run(name, args, done) {
+  var r = google.script.run.withSuccessHandler(done).withFailureHandler(function () {
+    alert('연결이 불안정해요. 잠시 뒤에 다시 눌러 주세요.');
+    document.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+  });
+  r[name].apply(r, args);
+}
+
+function fillAdmin(res) {
+  isOpen = res.open;
+  el('info').textContent = '선정한 질문 ' + res.selected + '개 · 준비된 퀴즈 문항 ' + res.ready + '개 · ' +
+    (res.hasKey ? 'AI로 오답을 만들어요' : 'AI 키가 없어 다른 학생 답으로 임시 오답을 만들어요');
+  if (!el('novel').dataset.set) { el('novel').value = res.context; el('novel').dataset.set = '1'; }
+  el('url').value = new URL('quiz.html', location.href).href;
+  el('openState').textContent = '지금 퀴즈는 ' + (isOpen ? '🟢 열려 있어요.' : '🔴 닫혀 있어요.');
+  el('toggle').textContent = isOpen ? '퀴즈 닫기' : '퀴즈 열기';
+}
+function refreshAdmin() { run('getQuizAdmin', [pin], function (res) { if (res.success) fillAdmin(res); }); }
+
+el('enter').onclick = function () {
+  pin = el('pin').value;
+  if (!pin) { el('msg').textContent = '비밀번호를 입력해 주세요.'; return; }
+  el('enter').disabled = true;
+  run('getQuizAdmin', [pin], function (res) {
+    el('enter').disabled = false;
+    if (!res.success) { el('msg').textContent = res.message; return; }
+    el('gate').style.display = 'none'; el('main').style.display = 'block';
+    fillAdmin(res); loadResults();
+  });
+};
+el('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('enter').click(); });
+
+el('makeBtn').onclick = function () {
+  var b = el('makeBtn'); b.disabled = true; b.textContent = '만드는 중... (조금 걸려요)'; el('makeMsg').textContent = '';
+  run('buildQuizItems', [pin, el('novel').value], function (res) {
+    b.disabled = false; b.textContent = '문항 만들기·갱신';
+    if (!res.success) { el('makeMsg').style.color = '#E0334C'; el('makeMsg').textContent = res.message; return; }
+    el('makeMsg').style.color = '#139A6A';
+    el('makeMsg').textContent = '새로 만든 문항 ' + res.made + '개' + (res.usedAI ? ' (AI 오답)' : ' (임시 오답)') +
+      (res.remaining ? ' · 남은 ' + res.remaining + '개는 버튼을 한 번 더 눌러 주세요.' : ' · 모두 준비됐어요!');
+    refreshAdmin();
+  });
+};
+el('toggle').onclick = function () {
+  el('toggle').disabled = true;
+  run('setQuizOpen', [pin, !isOpen], function () { el('toggle').disabled = false; refreshAdmin(); });
+};
+el('resBtn').onclick = loadResults;
+
+function loadResults() {
+  el('resBtn').disabled = true;
+  run('getQuizResults', [pin], function (res) { el('resBtn').disabled = false; if (res.success) render(res); });
+}
+
+function bars(title, arr) {
+  var b = make('div', 'box'); b.appendChild(make('h2', '', title));
+  arr.forEach(function (a) {
+    var p = pct(a.ok, a.total), r = make('div', 'brow');
+    r.appendChild(make('span', 'bl', a.name));
+    var tr = make('div', 'track'), f = make('div', 'fill');
+    f.style.width = p + '%'; f.style.background = p < 50 ? '#FF6B8A' : p < 80 ? '#FFC83D' : '#2BC48A';
+    tr.appendChild(f); r.appendChild(tr);
+    r.appendChild(make('span', 'bv', p + '%' + (a.n ? ' · ' + a.n + '명' : '')));
+    b.appendChild(r);
+  });
+  return b;
+}
+
+// ---- 학생별 성취 (반별로 묶어서 보기) ----
+function numOf(id) {
+  var s = String(id);
+  return s.length === 5 ? Number(s.slice(3)) : (s.length === 4 ? Number(s.slice(2)) : 0);
+}
+function stuName(s) { return s.name || (numOf(s.id) ? numOf(s.id) + '번' : s.id); }
+function chip(text, on, fn) {
+  var b = make('button', 'chip' + (on ? ' on' : ''), text);
+  b.type = 'button'; b.onclick = fn;
+  return b;
+}
+function byId(a, b) { return a.s.id.localeCompare(b.s.id, 'ko', { numeric: true }); }
+
+function renderStudents() {
+  var box = el('stuBox'); box.innerHTML = '';
+  box.appendChild(make('h2', '', '학생별 성취 (반별)'));
+
+  // 반 이름과 회차 표시를 나누기: "3학년 1반 · 2회 (6/10 → 9/10)"
+  var S = lastRes.students.map(function (s) {
+    var p = String(s.label).split(' · ');
+    return { s: s, cls: p[0], more: p.slice(1).join(' · ') };
+  });
+  var groups = {};
+  S.forEach(function (x) { (groups[x.cls] = groups[x.cls] || []).push(x); });
+  var names = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b, 'ko', { numeric: true }); });
+  if (clsFilter !== '전체' && !groups[clsFilter]) clsFilter = '전체';
+
+  // 반 버튼과 정렬 선택
+  var tools = make('div', 'row');
+  tools.appendChild(chip('전체 ' + S.length + '명', clsFilter === '전체', function () { clsFilter = '전체'; renderStudents(); }));
+  names.forEach(function (c) {
+    tools.appendChild(chip(c + ' ' + groups[c].length + '명', clsFilter === c, function () { clsFilter = c; renderStudents(); }));
+  });
+  var sel = document.createElement('select');
+  [['num', '번호순'], ['low', '점수 낮은 순']].forEach(function (o) {
+    var op = make('option', '', o[1]); op.value = o[0];
+    if (sortMode === o[0]) op.selected = true;
+    sel.appendChild(op);
+  });
+  sel.onchange = function () { sortMode = sel.value; renderStudents(); };
+  tools.appendChild(sel);
+  box.appendChild(tools);
+
+  names.forEach(function (c) {
+    if (clsFilter !== '전체' && clsFilter !== c) return;
+    var g = groups[c], ok = 0, tot = 0;
+    g.forEach(function (x) { ok += x.s.score; tot += x.s.total; });
+    box.appendChild(make('div', 'grp', c + ' · 참여 ' + g.length + '명 · 평균 정답률 ' + pct(ok, tot) + '%'));
+
+    g.slice().sort(function (a, b) {
+      if (sortMode === 'low') {
+        return (a.s.score / a.s.total - b.s.score / b.s.total) || byId(a, b);
+      }
+      return byId(a, b);
+    }).forEach(function (x) {
+      var s = x.s, p = pct(s.score, s.total), r = make('div', 'srow');
+      r.appendChild(make('strong', '', stuName(s)));
+      r.appendChild(make('span', 'sub', s.id + (x.more ? ' · ' + x.more : '')));
+      var pill = make('span', 'pill', s.score + '/' + s.total + ' (' + p + '%)');
+      pill.style.background = p < 50 ? '#FFE3EA' : p < 80 ? '#FFF4D1' : '#DDF6EC';
+      r.appendChild(pill);
+      r.appendChild(make('span', 'wk', s.weak ? '다시 볼 단계: ' + s.weak : '모두 맞혔어요 🎉'));
+      box.appendChild(r);
+    });
+  });
+}
+
+function render(res) {
+  var box = el('res'); box.innerHTML = '';
+  var S = res.students;
+  if (!S.length) { box.appendChild(make('p', 'note', '아직 퀴즈를 푼 학생이 없어요.')); return; }
+  lastRes = res;
+  var ok = 0, tot = 0; S.forEach(function (s) { ok += s.score; tot += s.total; });
+  var kd = {}; res.byKind.forEach(function (k) { kd[k.name] = k; });
+  var sum = make('div', 'sum');
+  [['참여 학생', S.length + '명'], ['전체 정답률', pct(ok, tot) + '%'],
+   ['🔍 사실 질문', kd['사실'] ? pct(kd['사실'].ok, kd['사실'].total) + '%' : '-'],
+   ['💡 확장 질문', kd['확장'] ? pct(kd['확장'].ok, kd['확장'].total) + '%' : '-']].forEach(function (x) {
+    var c = make('div', 'stat'); c.appendChild(make('div', 'sv', x[1])); c.appendChild(make('div', 'sl', x[0])); sum.appendChild(c);
+  });
+  box.appendChild(sum);
+  box.appendChild(bars('반별 정답률', res.byClass.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'ko', { numeric: true }); })));
+  box.appendChild(bars('소설 단계별 정답률', res.byStage.slice().sort(function (a, b) { return STAGES.indexOf(a.name) - STAGES.indexOf(b.name); })));
+
+  var sb = make('div', 'box'); sb.id = 'stuBox';
+  box.appendChild(sb);
+  renderStudents();
+
+  var ib = make('div', 'box'); ib.appendChild(make('h2', '', '어려웠던 문항 (정답률 낮은 순)'));
+  res.items.slice(0, 15).forEach(function (it) {
+    var d = make('div', 'it');
+    d.appendChild(make('div', 't', '[' + it.st + ' · ' + it.k + '] ' + it.q + ' — 정답률 ' + pct(it.ok, it.n) + '% (' + it.ok + '/' + it.n + '명)'));
+    if (it.topWrong) d.appendChild(make('div', 'w', '가장 많이 고른 오답 (' + it.topCount + '명): ' + it.topWrong));
+    d.appendChild(make('div', 'c', '정답: ' + it.correct));
+    ib.appendChild(d);
+  });
+  box.appendChild(ib);
+}
+</script>
+</body>
+</html>
