@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <title>소설 읽고 질문 만들기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1F2A44;
+      --sub: #5E6B85;
+      --sky: #2F9BFF;   --sky-soft: #E6F3FF;
+      --sun: #FFC83D;   --sun-soft: #FFF4D1;
+      --mint: #2BC48A;  --mint-soft: #DDF6EC;
+      --coral: #FF6B8A; --coral-soft: #FFE3EA;
+      --display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: #F7FBFF; color: var(--ink);
+      font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+      font-size: 17px; line-height: 1.6;
+    }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 22px 16px 56px; }
+
+    .top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .logo {
+      width: 60px; height: 60px; flex: none; display: grid; place-items: center;
+      background: var(--sun); border-radius: 50%; font-size: 30px; animation: hop 1.1s ease-out 0.3s 1;
+    }
+    .titles { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+    h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1.2; }
+    .made {
+      display: inline-block; padding: 3px 12px; background: var(--coral); color: #fff;
+      font-family: var(--display); font-size: 15px; border-radius: 999px; transform: rotate(-3deg);
+    }
+    .sub { flex-basis: 100%; margin: 0; color: var(--sub); font-size: 15px; }
+
+    section { margin-bottom: 16px; padding: 18px; border-radius: 20px; --accent: var(--sky); }
+    section.info  { background: var(--mint-soft); --accent: var(--mint); }
+    section.stage { background: var(--coral-soft); --accent: var(--coral); }
+    section.fact  { background: var(--sky-soft);  --accent: var(--sky); }
+    section.ext   { background: var(--sun-soft);  --accent: #F2A900; }
+
+    h2 { margin: 0 0 4px; font-family: var(--display); font-weight: 400; font-size: 20px; }
+    .hint { margin: 0 0 10px; color: var(--sub); font-size: 15px; }
+    label.field { display: block; margin: 14px 0 6px; font-weight: 700; font-size: 15px; }
+
+    input[type="text"], textarea {
+      width: 100%; padding: 12px 14px; border: 2px solid #fff; border-radius: 14px;
+      font: inherit; background: #fff; color: var(--ink);
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input[readonly], textarea[readonly] { background: rgba(255,255,255,.55); color: #4a5570; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row label.field { margin-top: 0; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .chip { position: relative; --c: var(--sky); --t: #fff; }
+    .chip input { position: absolute; opacity: 0; inset: 0; }
+    .chip span {
+      display: inline-block; padding: 10px 20px; background: #fff; color: var(--ink);
+      border: 2px solid var(--c); border-radius: 999px; font-family: var(--display); font-size: 18px; cursor: pointer;
+    }
+    .chip input:checked + span { background: var(--c); color: var(--t); transform: scale(1.06); }
+    .chip input:focus-visible + span { outline: 3px solid var(--ink); outline-offset: 2px; }
+    .chip input:disabled + span { cursor: default; }
+    .chip input:disabled:not(:checked) + span { opacity: .4; }
+
+    .actions { padding-top: 6px; }
+    button {
+      width: 100%; padding: 15px; border: 0; border-radius: 18px;
+      font-family: var(--display); font-size: 20px; cursor: pointer;
+    }
+    button:active { transform: translateY(3px); }
+    #submitBtn { background: var(--sky); color: #fff; box-shadow: 0 4px 0 #1B78D1; }
+    #submitBtn:active { box-shadow: 0 1px 0 #1B78D1; }
+    #submitBtn:disabled { opacity: .6; cursor: default; }
+    #editBtn { display: none; background: var(--sun); color: var(--ink); box-shadow: 0 4px 0 #D9A100; }
+    #editBtn:active { box-shadow: 0 1px 0 #D9A100; }
+    button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+    #status { min-height: 28px; margin-top: 16px; text-align: center; font-weight: 700; }
+    #status.ok { color: #139A6A; }
+    #status.err { color: #E0334C; }
+
+    .praise {
+      margin-top: 14px; padding: 20px 16px; border-radius: 22px; text-align: center;
+      background: var(--sun-soft); border: 3px dashed var(--sun);
+      font-family: var(--display); font-size: 22px; line-height: 1.45; animation: pop .5s ease-out;
+    }
+    .praise[hidden] { display: none; }
+    .party { font-size: 38px; line-height: 1.2; }
+    .praise p { margin: 6px 0 0; }
+
+    @keyframes hop { 0%,100% { transform: translateY(0); } 40% { transform: translateY(-12px); } 70% { transform: translateY(0); } }
+    @keyframes pop { 0% { transform: scale(.7); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .logo, .praise { animation: none; }
+      .chip input:checked + span { transform: none; }
+    }
+    @media (max-width: 520px) {
+      .row { grid-template-columns: 1fr; }
+      .row label.field { margin-top: 14px; }
+      .row > div:first-child label.field { margin-top: 0; }
+      h1 { font-size: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div class="logo">📖</div>
+      <div class="titles">
+        <h1>소설 읽고 질문 만들기</h1>
+        <span class="made">made by 국어쌤</span>
+        <p class="sub">질문 두 개를 만들고, 내 힘으로 답해 보세요 🌈</p>
+      </div>
+    </header>
+
+    <section class="info">
+      <div class="row">
+        
+        <div>
+          <label class="field" for="studentId">학번</label>
+          <input type="text" id="studentId" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="5자리 학번 (예: 30105)">
+        </div>
+      </div>
+    </section>
+
+    <section class="stage">
+      <h2>🚩 소설의 어느 단계를 읽었나요?</h2>
+      <div class="chips">
+        <label class="chip" style="--c:#2F9BFF;"><input type="radio" name="stage" value="발단"><span>발단</span></label>
+        <label class="chip" style="--c:#2BC48A;"><input type="radio" name="stage" value="전개"><span>전개</span></label>
+        <label class="chip" style="--c:#FFC83D; --t:#1F2A44;"><input type="radio" name="stage" value="위기"><span>위기</span></label>
+        <label class="chip" style="--c:#FF6B8A;"><input type="radio" name="stage" value="절정"><span>절정</span></label>
+        <label class="chip" style="--c:#8B7CF6;"><input type="radio" name="stage" value="결말"><span>결말</span></label>
+      </div>
+    </section>
+
+    <section class="fact">
+      <h2>🔍 사실 질문</h2>
+      <p class="hint">글을 읽으면 답이 그대로 나오는 질문이에요. (누가, 언제, 어디서, 무엇을)</p>
+      <label class="field" for="q1">내가 만든 질문</label>
+      <input type="text" id="q1" autocomplete="off">
+      <label class="field" for="a1">내 답</label>
+      <textarea id="a1"></textarea>
+    </section>
+
+    <section class="ext">
+      <h2>💡 확장 질문</h2>
+      <p class="hint">글 밖으로 생각을 넓히는 질문이에요. (왜 그랬을까? 내가 주인공이라면?)</p>
+      <label class="field" for="q2">내가 만든 질문</label>
+      <input type="text" id="q2" autocomplete="off">
+      <label class="field" for="a2">내 답</label>
+      <textarea id="a2"></textarea>
+    </section>
+
+    <div class="actions">
+      <button type="button" id="submitBtn">제출하기</button>
+      <button type="button" id="editBtn">✏️ 수정하기</button>
+      <div id="status" role="status" aria-live="polite"></div>
+      <div id="praise" class="praise" hidden>
+        <div class="party">🎉</div>
+        <p>열심히 고민한 당신은 분명 성공할거에요!!</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    var KEY_IDS  = ['studentId'];
+    var EDIT_IDS = ['q1', 'a1', 'q2', 'a2'];
+    var LABELS = {
+      name: '이름', studentId: '학번', q1: '사실 질문', a1: '사실 질문의 답',
+      q2: '확장 질문', a2: '확장 질문의 답'
+    };
+
+    var submitBtn = document.getElementById('submitBtn');
+    var editBtn = document.getElementById('editBtn');
+    var statusEl = document.getElementById('status');
+    var praiseEl = document.getElementById('praise');
+    var submitLabel = '제출하기';
+
+    function el(id) { return document.getElementById(id); }
+    function val(id) { return el(id).value.trim(); }
+
+    function showStatus(msg, type) {
+      statusEl.textContent = msg;
+      statusEl.className = type || '';
+    }
+
+    function getStage() {
+      var checked = document.querySelector('input[name="stage"]:checked');
+      return checked ? checked.value : '';
+    }
+
+    function setLocked(ids, locked) {
+      ids.forEach(function (id) { el(id).readOnly = locked; });
+    }
+    function setStageLocked(locked) {
+      document.querySelectorAll('input[name="stage"]').forEach(function (r) { r.disabled = locked; });
+    }
+
+    submitBtn.addEventListener('click', function () {
+      var formData = {
+       studentId: val('studentId'), stage: getStage(),
+        q1: val('q1'), a1: val('a1'), q2: val('q2'), a2: val('a2')
+      };
+
+      var order = ['studentId', 'stage', 'q1', 'a1', 'q2', 'a2'];
+      for (var i = 0; i < order.length; i++) {
+        var key = order[i];
+        if (!formData[key]) {
+          if (key === 'stage') {
+            showStatus('소설 단계를 골라 주세요.', 'err');
+          } else {
+            showStatus(LABELS[key] + '을(를) 입력해 주세요.', 'err');
+            el(key).focus();
+          }
+          return;
+        }
+      }
+
+      if (!/^\d{5}$/.test(formData.studentId)) {
+        showStatus('학번은 숫자 5자리로 써 주세요. (예: 30105)', 'err');
+        el('studentId').focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '저장 중...';
+      showStatus('', '');
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitLabel;
+          if (res && res.success) {
+            onSaved(res);
+          } else {
+            showStatus((res && res.message) || '저장하지 못했어요. 다시 눌러 주세요.', 'err');
+          }
+        })
+        .withFailureHandler(function () {
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitLabel;
+          showStatus('연결이 불안정해요. 잠시 뒤에 다시 눌러 주세요.', 'err');
+        })
+        .saveData(formData);
+    });
+
+    // 제출(또는 수정) 성공: 화면 잠그기 + 수정하기 버튼 + 칭찬 카드 보이기
+    function onSaved(res) {
+          showStatus(res.message + ' (학번 ' + val('studentId') + ')', 'ok');
+      setLocked(KEY_IDS.concat(EDIT_IDS), true);
+      setStageLocked(true);
+      submitBtn.style.display = 'none';
+      editBtn.style.display = 'block';
+      submitLabel = '제출하기';
+      praiseEl.hidden = false;
+      praiseEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 수정하기: 질문과 답 칸만 열기 (이름·학번·단계는 잠금 유지)
+    editBtn.addEventListener('click', function () {
+      setLocked(EDIT_IDS, false);
+      submitLabel = '수정 완료';
+      submitBtn.textContent = submitLabel;
+      submitBtn.style.display = 'block';
+      editBtn.style.display = 'none';
+      praiseEl.hidden = true;
+      showStatus('고친 뒤 [수정 완료]를 눌러 주세요.', 'ok');
+      el('q1').focus();
+    });
+  </script>
+</body>
+</html>
