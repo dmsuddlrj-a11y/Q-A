@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <script src="api.js"></script>
+  <title>교사용 정리 화면</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1F2A44; --sub: #5E6B85;
+      --sky: #2F9BFF; --sky-soft: #E6F3FF;
+      --sun: #FFC83D; --sun-soft: #FFF4D1;
+      --mint: #2BC48A; --mint-soft: #DDF6EC;
+      --coral: #FF6B8A;
+      --display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: #F7FBFF; color: var(--ink);
+      font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+      font-size: 16px; line-height: 1.6;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 22px 16px 56px; }
+    .top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .logo { width: 56px; height: 56px; display: grid; place-items: center; background: var(--mint); border-radius: 50%; font-size: 28px; flex: none; }
+    h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 26px; }
+
+    input[type="text"], input[type="password"], select {
+      padding: 11px 14px; border: 2px solid #cfe3f7; border-radius: 14px; font: inherit; background: #fff; color: var(--ink);
+    }
+    input:focus, select:focus { outline: none; border-color: var(--sky); }
+    button.main {
+      padding: 11px 20px; border: 0; border-radius: 14px; background: var(--sky); color: #fff;
+      font-family: var(--display); font-size: 17px; cursor: pointer; box-shadow: 0 3px 0 #1B78D1;
+    }
+    button.main:active { transform: translateY(2px); box-shadow: 0 1px 0 #1B78D1; }
+    button:disabled { opacity: .6; cursor: default; }
+    button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+    #lock { padding: 22px 18px; background: var(--mint-soft); border-radius: 20px; }
+    #lock p { margin: 0 0 12px; }
+    .lockRow { display: flex; flex-wrap: wrap; gap: 10px; }
+    .lockRow input { flex: 1; min-width: 180px; }
+    #lockMsg { margin-top: 10px; min-height: 24px; color: #E0334C; font-weight: 700; }
+
+    #view { display: none; }
+    .tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .tools input { flex: 1; min-width: 160px; }
+
+    .bar { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .lb { flex: none; width: 34px; padding-top: 6px; font-family: var(--display); color: var(--sub); }
+    .bar > div { display: flex; flex-wrap: wrap; gap: 8px; }
+    .f {
+      padding: 7px 16px; border: 2px solid var(--sky); border-radius: 999px; background: #fff; color: var(--ink);
+      font-family: var(--display); font-size: 16px; cursor: pointer;
+    }
+    .f.on { background: var(--sky); color: #fff; }
+    .f.cls { border-color: var(--coral); }
+    .f.cls.on { background: var(--coral); color: #fff; }
+    .f.star { border-color: #F2A900; }
+    .f.star.on { background: var(--sun); color: var(--ink); }
+
+    .note { margin: 6px 0 0; color: var(--sub); font-size: 14px; }
+    #selInfo { margin: 10px 0 0; font-family: var(--display); font-size: 18px; color: #B07A00; }
+    #count { margin: 4px 0 6px; color: var(--sub); font-size: 15px; }
+
+    .grp {
+      margin: 20px 0 10px; padding: 8px 16px; background: var(--coral); color: #fff;
+      border-radius: 14px; font-family: var(--display); font-size: 18px;
+    }
+    .card { margin-bottom: 14px; padding: 16px; background: #fff; border: 2px solid #e3eefa; border-radius: 20px; }
+    .head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 10px; }
+    .nm { font-family: var(--display); font-weight: 400; font-size: 20px; }
+    .sid { color: var(--sub); }
+    .cl { padding: 2px 10px; border-radius: 999px; background: var(--coral); color: #fff; font-size: 14px; }
+    .tag { padding: 2px 12px; border-radius: 999px; color: #fff; font-family: var(--display); font-size: 15px; }
+    .time { margin-left: auto; color: var(--sub); font-size: 14px; }
+    .qa { margin-top: 8px; padding: 10px 14px; border-radius: 14px; border: 3px solid transparent; }
+    .qa.fact { background: var(--sky-soft); }
+    .qa.ext { background: var(--sun-soft); }
+    .qa.picked { border-color: var(--sun); box-shadow: 0 0 0 2px #F2A900 inset; }
+    .q { margin: 0 0 4px; font-weight: 700; }
+    .a { margin: 0; white-space: pre-wrap; }
+    .selrow { margin-top: 8px; text-align: right; }
+    .selbtn {
+      padding: 6px 16px; border: 2px solid #F2A900; border-radius: 999px; background: #fff; color: var(--ink);
+      font-family: var(--display); font-size: 15px; cursor: pointer;
+    }
+    .selbtn.on { background: var(--sun); }
+    .empty { padding: 30px 0; text-align: center; color: var(--sub); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div class="logo">👩‍🏫</div>
+      <h1>교사용 정리 화면</h1>
+    </header>
+
+    <section id="lock">
+      <p>교사용 비밀번호를 입력해 주세요.</p>
+      <div class="lockRow">
+        <input type="password" id="pin" autocomplete="off" placeholder="비밀번호">
+        <button type="button" class="main" id="openBtn">열기</button>
+      </div>
+      <div id="lockMsg" role="alert"></div>
+    </section>
+
+    <section id="view">
+      <div class="tools">
+        <input type="text" id="search" placeholder="학번으로 찾기">
+        <select id="sort">
+          <option value="class">반·번호순</option>
+          <option value="new">최신순</option>
+        </select>
+        <button type="button" class="f star" id="selOnly">⭐ 선정만 보기</button>
+        <button type="button" class="main" id="refreshBtn">새로고침</button>
+      </div>
+      <div class="bar"><span class="lb">반</span><div id="classes"></div></div>
+      <div class="bar"><span class="lb">단계</span><div id="filters"></div></div>
+      <p class="note">질문 아래 버튼을 누르면 바로 저장돼요. 다시 누르면 빠져요. 학생이 질문이나 답을 고치면 그 질문의 선정은 자동으로 풀려요.</p>
+      <div id="selInfo"></div>
+      <div id="count"></div>
+      <div id="list"></div>
+    </section>
+  </main>
+
+  <script>
+    var STAGES = ['발단', '전개', '위기', '절정', '결말'];
+    var COLORS = { '발단': '#2F9BFF', '전개': '#2BC48A', '위기': '#FFC83D', '절정': '#FF6B8A', '결말': '#8B7CF6' };
+    var allRows = [], pin = '', stage = '전체', klass = '전체', onlySel = false;
+
+    function el(id) { return document.getElementById(id); }
+    function make(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text !== undefined) n.textContent = text;   // 학생이 쓴 글은 textContent로만 넣어요 (안전)
+      return n;
+    }
+
+    // 학번에서 학년·반·번호 읽기: 5자리(30105) 또는 4자리(3105)
+    function annotate(r) {
+      var s = String(r.studentId).replace(/\D/g, '');
+      var g = 999, c = 999, n = 999, key = 'etc', label = '반 확인 불가';
+      if (s.length === 5) { g = +s.charAt(0); c = +s.slice(1, 3); n = +s.slice(3); }
+      else if (s.length === 4) { g = +s.charAt(0); c = +s.charAt(1); n = +s.slice(2); }
+      if (g !== 999) { key = g + '-' + c; label = g + '학년 ' + c + '반'; }
+      r.g = g; r.c = c; r.n = n; r.key = key; r.label = label;
+      return r;
+    }
+
+    function load(first) {
+      var btn = first ? el('openBtn') : el('refreshBtn');
+      var usePin = first ? el('pin').value : pin;
+      if (!usePin) { el('lockMsg').textContent = '비밀번호를 입력해 주세요.'; return; }
+      btn.disabled = true;
+      google.script.run
+        .withSuccessHandler(function (res) {
+          btn.disabled = false;
+          if (!res || !res.success) {
+            var m = (res && res.message) || '불러오지 못했어요.';
+            if (first) el('lockMsg').textContent = m; else alert(m);
+            return;
+          }
+          pin = usePin;
+          allRows = res.rows.map(annotate);
+          el('lock').style.display = 'none';
+          el('view').style.display = 'block';
+          render();
+        })
+        .withFailureHandler(function () {
+          btn.disabled = false;
+          var m = '연결이 불안정해요. 잠시 뒤에 다시 눌러 주세요.';
+          if (first) el('lockMsg').textContent = m; else alert(m);
+        })
+        .getTeacherData(usePin);
+    }
+
+    function chip(text, cls, on, onClick) {
+      var b = make('button', 'f ' + cls + (on ? ' on' : ''), text);
+      b.type = 'button';
+      b.addEventListener('click', onClick);
+      return b;
+    }
+
+    // 선정 개수 표시
+    function updateSelInfo() {
+      var f = allRows.filter(function (r) { return r.factSel; }).length;
+      var e = allRows.filter(function (r) { return r.extSel; }).length;
+      el('selInfo').textContent = '⭐ 선정 ' + (f + e) + '개 (사실 ' + f + ' · 확장 ' + e + ')';
+    }
+
+    function paintSel(btn, box, on) {
+      btn.className = 'selbtn' + (on ? ' on' : '');
+      btn.textContent = on ? '⭐ 퀴즈에 들어감' : '☆ 퀴즈에 넣기';
+      if (on) box.classList.add('picked'); else box.classList.remove('picked');
+    }
+
+    // 퀴즈에 넣기/빼기: 서버에 저장하고 성공하면 화면만 바꿔요 (스크롤 위치 유지)
+    function toggleSel(r, kind, field, q, a, btn, box) {
+      var next = !r[field];
+      btn.disabled = true;
+      google.script.run
+        .withSuccessHandler(function (res) {
+          btn.disabled = false;
+          if (!res || !res.success) {
+            alert((res && res.message) || '저장하지 못했어요. 다시 눌러 주세요.');
+            return;
+          }
+          r[field] = next;
+          paintSel(btn, box, next);
+          updateSelInfo();
+        })
+        .withFailureHandler(function () {
+          btn.disabled = false;
+          alert('연결이 불안정해요. 잠시 뒤에 다시 눌러 주세요.');
+        })
+        .setSelection(pin, r.studentId, r.stage, kind, next, q, a);
+    }
+
+    function render() {
+      var kw = el('search').value.trim().toLowerCase();
+      var byClass = el('sort').value === 'class';
+      var SI = { '발단': 0, '전개': 1, '위기': 2, '절정': 3, '결말': 4 };
+
+      // 반 목록 (학년·반 순서, 읽을 수 없는 학번은 맨 뒤)
+      var classMap = {};
+      allRows.forEach(function (r) { classMap[r.key] = { key: r.key, g: r.g, c: r.c, label: r.label }; });
+      var classList = Object.keys(classMap).map(function (k) { return classMap[k]; })
+        .sort(function (a, b) { return (a.g - b.g) || (a.c - b.c); });
+      if (klass !== '전체' && !classMap[klass]) klass = '전체';
+
+      var base = allRows.filter(function (r) {
+        return (!kw || (r.name + r.studentId).toLowerCase().indexOf(kw) > -1) &&
+               (!onlySel || r.factSel || r.extSel);
+      });
+      var forClass = base.filter(function (r) { return stage === '전체' || r.stage === stage; });
+      var forStage = base.filter(function (r) { return klass === '전체' || r.key === klass; });
+      var rows = forStage.filter(function (r) { return stage === '전체' || r.stage === stage; });
+
+      // 반 버튼
+      var cbar = el('classes');
+      cbar.innerHTML = '';
+      cbar.appendChild(chip('전체 ' + forClass.length, 'cls', klass === '전체', function () { klass = '전체'; render(); }));
+      classList.forEach(function (c) {
+        var n = forClass.filter(function (r) { return r.key === c.key; }).length;
+        cbar.appendChild(chip(c.label + ' ' + n, 'cls', klass === c.key, function () { klass = c.key; render(); }));
+      });
+
+      // 단계 버튼
+      var sbar = el('filters');
+      sbar.innerHTML = '';
+      ['전체'].concat(STAGES).forEach(function (s) {
+        var n = s === '전체' ? forStage.length : forStage.filter(function (r) { return r.stage === s; }).length;
+        sbar.appendChild(chip(s + ' ' + n, '', s === stage, function () { stage = s; render(); }));
+      });
+
+      // 정렬
+      rows.sort(function (a, b) {
+        if (!byClass) return b.ts - a.ts;
+        return (a.g - b.g) || (a.c - b.c) || (a.n - b.n) ||
+               ((SI[a.stage] === undefined ? 9 : SI[a.stage]) - (SI[b.stage] === undefined ? 9 : SI[b.stage])) ||
+               (b.ts - a.ts);
+      });
+
+      updateSelInfo();
+      el('count').textContent = '응답 ' + rows.length + '개';
+      var list = el('list');
+      list.innerHTML = '';
+      if (!rows.length) {
+        list.appendChild(make('p', 'empty', onlySel ? '아직 선정한 질문이 없어요.' : '조건에 맞는 응답이 아직 없어요.'));
+        return;
+      }
+
+      // 반별 제목 띠에 넣을 개수
+      var info = {};
+      rows.forEach(function (r) {
+        if (!info[r.key]) info[r.key] = { n: 0, ids: {} };
+        info[r.key].n++;
+        info[r.key].ids[r.studentId] = true;
+      });
+
+      var lastKey = null;
+      rows.forEach(function (r) {
+        if (byClass && r.key !== lastKey) {
+          var i = info[r.key];
+          list.appendChild(make('div', 'grp', r.label + ' · 응답 ' + i.n + '개 · ' + Object.keys(i.ids).length + '명'));
+          lastKey = r.key;
+        }
+        var card = make('article', 'card');
+        var head = make('div', 'head');
+               head.appendChild(make('strong', 'nm', r.n === 999 ? r.studentId : r.n + '번'));
+        head.appendChild(make('span', 'sid', r.studentId));
+        if (!byClass) head.appendChild(make('span', 'cl', r.label));
+        var tag = make('span', 'tag', r.stage);
+        tag.style.background = COLORS[r.stage] || '#999';
+        if (r.stage === '위기') tag.style.color = '#1F2A44';
+        head.appendChild(tag);
+        head.appendChild(make('span', 'time', r.time));
+        card.appendChild(head);
+
+        [['fact', '🔍', r.q1, r.a1, 'factSel'], ['ext', '💡', r.q2, r.a2, 'extSel']].forEach(function (x) {
+          var box = make('div', 'qa ' + x[0]);
+          box.appendChild(make('p', 'q', x[1] + ' ' + x[2]));
+          box.appendChild(make('p', 'a', x[3]));
+          var btn = make('button', 'selbtn');
+          btn.type = 'button';
+          paintSel(btn, box, r[x[4]]);
+          btn.addEventListener('click', function () { toggleSel(r, x[0], x[4], x[2], x[3], btn, box); });
+          var row = make('div', 'selrow');
+          row.appendChild(btn);
+          box.appendChild(row);
+          card.appendChild(box);
+        });
+        list.appendChild(card);
+      });
+    }
+
+    el('openBtn').addEventListener('click', function () { load(true); });
+    el('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') load(true); });
+    el('refreshBtn').addEventListener('click', function () { load(false); });
+    el('search').addEventListener('input', render);
+    el('sort').addEventListener('change', render);
+    el('selOnly').addEventListener('click', function () {
+      onlySel = !onlySel;
+      this.className = 'f star' + (onlySel ? ' on' : '');
+      render();
+    });
+  </script>
+</body>
+</html>
