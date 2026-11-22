@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<script src="api.js"></script>
+<title>소설 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1F2A44;--sub:#5E6B85;--sky:#2F9BFF;--sky-soft:#E6F3FF;--sun:#FFC83D;--sun-soft:#FFF4D1;--mint:#2BC48A;--mint-soft:#DDF6EC;--coral:#FF6B8A;--coral-soft:#FFE3EA;--d:"Jua","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#F7FBFF;color:var(--ink);font:17px/1.6 "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+.wrap{max-width:680px;margin:0 auto;padding:22px 16px 56px}
+.top{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.logo{width:56px;height:56px;display:grid;place-items:center;background:var(--sun);border-radius:50%;font-size:28px;flex:none}
+h1{margin:0;font-family:var(--d);font-weight:400;font-size:26px}
+.made{display:inline-block;margin-left:8px;padding:2px 12px;background:var(--coral);color:#fff;font-family:var(--d);font-size:14px;border-radius:99px;transform:rotate(-3deg)}
+section{padding:18px;border-radius:20px;background:var(--mint-soft);margin-bottom:16px}
+section[hidden]{display:none}
+label{display:block;margin:12px 0 6px;font-weight:700;font-size:15px}
+input{width:100%;padding:12px 14px;border:2px solid #fff;border-radius:14px;font:inherit}
+input:focus{outline:none;border-color:var(--mint)}
+button.main{width:100%;margin-top:16px;padding:14px;border:0;border-radius:18px;background:var(--sky);color:#fff;font-family:var(--d);font-size:20px;cursor:pointer;box-shadow:0 4px 0 #1B78D1}
+button.main:active{transform:translateY(3px);box-shadow:0 1px 0 #1B78D1}
+button.main:disabled{opacity:.5;cursor:default}
+button.main.sun{background:var(--sun);color:var(--ink);box-shadow:0 4px 0 #D9A100}
+button.main.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 #cfe3f7}
+#msg,#retryMsg{margin-top:12px;min-height:24px;text-align:center;font-weight:700;color:#E0334C}
+#msg.ok{color:#139A6A}
+.tip{margin:12px 0 0;color:var(--sub);font-size:14px}
+#sQuiz{background:var(--sky-soft)}
+.pbar{height:12px;background:#fff;border-radius:99px;overflow:hidden}
+#prog{height:100%;width:0;background:var(--sky);border-radius:99px;transition:width .3s}
+.meta{display:flex;justify-content:space-between;margin:8px 0 14px;font-family:var(--d);color:var(--sub)}
+.note{margin:0 0 12px;padding:8px 12px;background:#fff;border-radius:12px;font-size:15px}
+#qtext{margin:0 0 14px;font-family:var(--d);font-size:22px;line-height:1.45}
+.opt{display:flex;gap:10px;align-items:flex-start;width:100%;margin:0 0 10px;padding:13px 14px;background:#fff;color:var(--ink);border:2px solid #cfe3f7;border-radius:16px;font:inherit;text-align:left;cursor:pointer}
+.opt.on{border-color:var(--sky);box-shadow:0 0 0 3px #bfe0ff}
+.no{flex:none;font-family:var(--d);color:var(--sky)}
+.nav{display:flex;gap:10px}
+.nav button{flex:1}
+#sResult{background:var(--sun-soft)}
+.roundTxt{text-align:center;font-family:var(--d);color:var(--sub)}
+.score{text-align:center;font-family:var(--d);font-size:46px;line-height:1.2}
+.cheer{text-align:center;font-family:var(--d);font-size:20px;margin:4px 0 14px}
+.sumbox{padding:12px 14px;margin-bottom:12px;background:#fff;border-radius:16px}
+h2{margin:16px 0 8px;font-family:var(--d);font-weight:400;font-size:20px}
+.wc{margin-bottom:12px;padding:14px;background:#fff;border-radius:18px}
+.tag{display:inline-block;margin-bottom:6px;padding:1px 12px;border-radius:99px;background:var(--sky);color:#fff;font-family:var(--d);font-size:14px}
+.wc .q{margin:0 0 8px;font-weight:700}
+.mine,.right{margin:4px 0;padding:8px 12px;border-radius:12px}
+.mine{background:var(--coral-soft)}.right{background:var(--mint-soft)}
+.mine b,.right b{display:block;font-size:13px}
+
+/* 성장 기록 */
+.grow{padding:14px;margin-bottom:12px;background:#fff;border-radius:18px}
+.grow[hidden]{display:none}
+.grow h3{margin:0 0 6px;font-family:var(--d);font-weight:400;font-size:19px}
+.gmsg{margin:0 0 10px;font-family:var(--d);font-size:18px;color:#139A6A}
+.chart{display:flex;align-items:flex-end;gap:10px;height:160px;padding:0 4px;border-bottom:2px solid #e3eefa}
+.col{flex:1;min-width:0;max-width:80px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.cv{font-family:var(--d);font-size:14px;margin-bottom:2px}
+.bar{width:100%;border-radius:10px 10px 0 0;background:#bfe0ff}
+.bar.now{background:var(--sky)}
+.cl{font-size:13px;color:var(--sub);margin:4px 0}
+.gt{width:100%;margin-top:12px;border-collapse:separate;border-spacing:3px;font-size:14px}
+.gt th{color:var(--sub);font-weight:400;padding:4px}
+.gt td{padding:6px 4px;text-align:center;border-radius:8px}
+.gt td:first-child,.gt th:first-child{text-align:left;white-space:nowrap;padding-left:0}
+.gcap{margin:6px 0 0;font-size:13px;color:var(--sub)}
+.gleft{margin:8px 0 0;font-weight:700}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="top"><div class="logo">🎯</div><h1>소설 퀴즈<span class="made">made by 국어쌤</span></h1></header>
+
+  <section id="sStart">
+    <p style="margin:0">친구들이 만든 질문으로 퀴즈를 풀어 봐요! 학번과 나만의 핀번호로 들어와요.</p>
+    <label for="sid">학번</label>
+    <input id="sid" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="5자리 학번 (예: 30105)">
+    <label for="pin">핀번호 (숫자 4자리)</label>
+    <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="● ● ● ●">
+    <div id="pin2box" hidden>
+      <label for="pin2">핀번호 한 번 더</label>
+      <input id="pin2" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="● ● ● ●">
+    </div>
+    <button class="main" id="startBtn">시작하기</button>
+    <div id="msg" role="alert"></div>
+    <p class="tip">처음이라면 사용할 핀번호를 내가 직접 정해요. 핀번호는 친구에게 알려 주지 않아요. 잊어버렸다면 선생님께 말씀드려요.</p>
+  </section>
+
+  <section id="sQuiz" hidden>
+    <div class="pbar"><div id="prog"></div></div>
+    <div class="meta"><span id="tags"></span><span id="pnum"></span></div>
+    <div class="note" id="note" hidden></div>
+    <p id="qtext"></p>
+    <div id="opts"></div>
+    <div class="nav">
+      <button class="main ghost" id="prev">← 이전</button>
+      <button class="main" id="next">다음 →</button>
+    </div>
+  </section>
+
+  <section id="sResult" hidden>
+    <div class="roundTxt" id="roundTxt"></div>
+    <div class="score" id="score"></div>
+    <div class="cheer" id="cheer"></div>
+    <div class="grow" id="growth" hidden></div>
+    <div id="review"></div>
+    <button class="main sun" id="retryBtn">🔁 다른 문제로 다시 풀기</button>
+    <div id="retryMsg" role="alert"></div>
+    <button class="main ghost" id="logoutBtn">나가기 (다른 친구 차례)</button>
+    <p style="text-align:center;color:#5E6B85;font-size:14px">같은 학번과 핀번호로 다시 들어오면 내 성장 기록을 다시 볼 수 있어요.</p>
+  </section>
+</main>
+
+<script>
+var L = ['①', '②', '③', '④', '⑤'];
+var STAGES = ['발단', '전개', '위기', '절정', '결말'];
+var items = [], picks = [], idx = 0, round = 1, me = {}, needSetup = false;
+function el(id) { return document.getElementById(id); }
+function mk(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x !== undefined) n.textContent = x; return n; }
+function show(id) { ['sStart', 'sQuiz', 'sResult'].forEach(function (s) { el(s).hidden = s !== id; }); window.scrollTo(0, 0); }
+function msg(t, ok) { el('msg').textContent = t || ''; el('msg').className = ok ? 'ok' : ''; }
+function pc(o, t) { return t ? Math.round(o * 100 / t) : 0; }
+function heat(p) { return p < 50 ? '#FFE3EA' : p < 80 ? '#FFF4D1' : '#DDF6EC'; }
+
+function begin(res) {
+  items = res.items; picks = items.map(function () { return null; }); idx = 0; round = res.round || 1;
+  el('note').textContent = res.note || ''; el('note').hidden = !res.note;
+  show('sQuiz'); draw();
+}
+
+// 처음 화면으로 돌아가기 (입력한 내용을 모두 지워요)
+function toStart() {
+  me = {}; needSetup = false; items = []; picks = [];
+  el('sid').value = ''; el('pin').value = ''; el('pin2').value = '';
+  el('pin2box').hidden = true; el('startBtn').textContent = '시작하기';
+  msg(''); show('sStart');
+}
+
+// 학번을 바꾸면 처음 등록 상태를 풀어요
+el('sid').addEventListener('input', function () {
+  needSetup = false; el('pin2box').hidden = true; el('pin2').value = ''; el('startBtn').textContent = '시작하기';
+});
+
+el('startBtn').onclick = function () {
+  var sid = el('sid').value.trim(), pin = el('pin').value.trim();
+  if (!/^\d{5}$/.test(sid)) return msg('학번은 숫자 5자리로 써 주세요. (예: 30105)');
+  if (!/^\d{4}$/.test(pin)) return msg('핀번호는 숫자 4자리로 써 주세요.');
+  if (needSetup && el('pin2').value.trim() !== pin) return msg('핀번호가 서로 달라요. 다시 확인해 주세요.');
+  msg(''); el('startBtn').disabled = true;
+  google.script.run.withSuccessHandler(function (res) {
+    el('startBtn').disabled = false;
+    if (res.needSetup) {
+      needSetup = true; el('pin2box').hidden = false; el('pin2').focus();
+      el('startBtn').textContent = '핀번호 등록하고 시작하기';
+      return msg('처음 오셨네요! 핀번호를 한 번 더 입력하면 등록돼요. 잊어버리지 않게 기억해 주세요.', true);
+    }
+    if (!res.success) return msg(res.message);
+    me = { id: sid, pin: pin }; needSetup = false;
+    el('pin').value = ''; el('pin2').value = ''; el('pin2box').hidden = true;
+    if (res.done) return showResult(res.result, res.rounds);
+    begin(res);
+  }).withFailureHandler(function () { el('startBtn').disabled = false; msg('연결이 불안정해요. 다시 눌러 주세요.'); })
+    .quizStart(sid, pin, false, needSetup);
+};
+
+function draw() {
+  var it = items[idx];
+  el('prog').style.width = (idx / items.length * 100) + '%';
+  el('pnum').textContent = (idx + 1) + ' / ' + items.length;
+  el('tags').textContent = it.stage + ' · ' + (it.kind === '사실' ? '🔍 사실 질문' : '💡 확장 질문') + (it.again ? ' · 🔁 다시 도전' : '');
+  el('qtext').textContent = it.q;
+  var box = el('opts'); box.innerHTML = '';
+  it.options.forEach(function (t, i) {
+    var b = mk('button', 'opt' + (picks[idx] === t ? ' on' : '')); b.type = 'button';
+    b.appendChild(mk('span', 'no', L[i])); b.appendChild(mk('span', '', t));
+    b.onclick = function () { picks[idx] = t; draw(); };
+    box.appendChild(b);
+  });
+  el('prev').disabled = idx === 0;
+  el('next').textContent = idx === items.length - 1 ? '제출하기' : '다음 →';
+  el('next').disabled = picks[idx] === null;
+}
+el('prev').onclick = function () { if (idx > 0) { idx--; draw(); } };
+el('next').onclick = function () {
+  if (idx < items.length - 1) { idx++; draw(); return; }
+  el('next').disabled = true; el('next').textContent = '채점 중...';
+  google.script.run.withSuccessHandler(function (res) {
+    if (!res.success) { alert(res.message); draw(); return; }
+    showResult(res.result, res.rounds);
+  }).withFailureHandler(function () { alert('연결이 불안정해요. 잠시 뒤에 다시 눌러 주세요.'); draw(); })
+    .quizSubmit(me.id, me.pin, items.map(function (it, i) { return { id: it.id, choice: picks[i] }; }), round);
+};
+
+// 다른 문제로 다시 풀기
+el('retryBtn').onclick = function () {
+  el('retryBtn').disabled = true; el('retryMsg').textContent = '새 문제를 고르는 중...';
+  google.script.run.withSuccessHandler(function (res) {
+    el('retryBtn').disabled = false;
+    if (!res.success) { el('retryMsg').textContent = res.message; return; }
+    el('retryMsg').textContent = ''; begin(res);
+  }).withFailureHandler(function () {
+    el('retryBtn').disabled = false; el('retryMsg').textContent = '연결이 불안정해요. 다시 눌러 주세요.';
+  }).quizStart(me.id, me.pin, true, false);
+};
+
+el('logoutBtn').onclick = toStart;
+
+// 회차별 성장 기록 그리기
+function renderGrowth(h) {
+  var g = el('growth'); g.innerHTML = '';
+  if (!h || !h.success || !h.rounds || !h.rounds.length) { g.hidden = true; return; }
+  g.hidden = false;
+  var R = h.rounds, n = R.length;
+  var first = pc(R[0].score, R[0].total), last = pc(R[n - 1].score, R[n - 1].total);
+
+  g.appendChild(mk('h3', '', '📈 나의 성장 기록 (' + n + '번 도전)'));
+  var m = n === 1 ? '첫 도전을 마쳤어요! 다시 풀면 성장 기록이 쌓여요 🌱'
+    : last > first ? '1회보다 ' + (last - first) + '%p 올랐어요! 🚀'
+    : last === first ? '꾸준히 도전하고 있어요! 💪'
+    : '이번에는 조금 어려웠어요. 틀린 문제를 다시 보면 금방 올라가요! 🌱';
+  g.appendChild(mk('p', 'gmsg', m));
+
+  var chart = mk('div', 'chart');
+  R.forEach(function (r, i) {
+    var p = pc(r.score, r.total), col = mk('div', 'col');
+    col.appendChild(mk('div', 'cv', p + '%'));
+    var b = mk('div', 'bar' + (i === n - 1 ? ' now' : ''));
+    b.style.height = Math.max(4, p * 1.0) + 'px';
+    col.appendChild(b);
+    col.appendChild(mk('div', 'cl', r.round + '회'));
+    chart.appendChild(col);
+  });
+  g.appendChild(chart);
+
+  var t = mk('table', 'gt'), hr = mk('tr');
+  hr.appendChild(mk('th', '', '영역'));
+  R.forEach(function (r) { hr.appendChild(mk('th', '', r.round + '회')); });
+  t.appendChild(hr);
+  function row(label, pick) {
+    var tr = mk('tr'), any = false;
+    tr.appendChild(mk('td', '', label));
+    R.forEach(function (r) {
+      var d = pick(r), td;
+      if (d && d.total) {
+        var p = pc(d.ok, d.total);
+        td = mk('td', '', p + '%'); td.style.background = heat(p); any = true;
+      } else {
+        td = mk('td', '', '-');
+      }
+      tr.appendChild(td);
+    });
+    if (any) t.appendChild(tr);
+  }
+  STAGES.forEach(function (s) { row(s, function (r) { return r.stage[s]; }); });
+  row('🔍 사실 질문', function (r) { return r.kind['사실']; });
+  row('💡 확장 질문', function (r) { return r.kind['확장']; });
+  g.appendChild(t);
+  g.appendChild(mk('p', 'gcap', '칸의 숫자는 그 회차에서 해당 영역의 정답률이에요. 초록일수록 잘했어요. (-는 그 회차에 나오지 않은 영역)'));
+  g.appendChild(mk('p', 'gleft', h.left > 0 ? '🔁 아직 다시 도전할 문제 ' + h.left + '개 (가장 최근에 틀린 문제)' : '지금까지 푼 문제는 모두 맞혔어요! 🎉'));
+}
+
+function showResult(r, rounds) {
+  show('sResult');
+  el('retryMsg').textContent = ''; el('retryBtn').disabled = false;
+  el('roundTxt').textContent = (rounds || r.round || 1) + '회차 결과';
+  var p = Math.round(r.score * 100 / r.total);
+  el('score').textContent = r.score + ' / ' + r.total;
+  el('cheer').textContent = p === 100 ? '모두 맞혔어요! 🎉' : p >= 80 ? '정말 잘했어요! 👏' : p >= 50 ? '좋아요! 틀린 문제만 다시 확인해 봐요 💪' : '괜찮아요! 소설을 한 번 더 읽으면 쑥쑥 늘 거예요 🌱';
+
+  var g = el('growth'); g.hidden = false; g.textContent = '성장 기록을 불러오는 중...';
+  google.script.run.withSuccessHandler(renderGrowth)
+    .withFailureHandler(function () { g.hidden = true; }).quizHistory(me.id, me.pin);
+
+  var rv = el('review'); rv.innerHTML = '';
+  var wrong = r.details.filter(function (d) { return !d.ok; });
+
+  var kd = { '사실': [0, 0], '확장': [0, 0] };
+  r.details.forEach(function (d) { kd[d.k][1]++; if (d.ok) kd[d.k][0]++; });
+  var kb = mk('div', 'sumbox');
+  kb.appendChild(mk('div', '', '이번 회차 · 🔍 사실 질문 ' + kd['사실'][0] + '/' + kd['사실'][1] + ' · 💡 확장 질문 ' + kd['확장'][0] + '/' + kd['확장'][1]));
+  rv.appendChild(kb);
+
+  if (!wrong.length) { rv.appendChild(mk('div', 'sumbox', '이번 회차는 틀린 문제가 없어요. 소설을 아주 꼼꼼하게 읽었네요!')); return; }
+
+  var miss = {};
+  wrong.forEach(function (d) { miss[d.st] = (miss[d.st] || 0) + 1; });
+  var order = Object.keys(miss).sort(function (a, b) { return miss[b] - miss[a]; });
+  rv.appendChild(mk('div', 'sumbox', '📖 다시 읽어 볼 부분: ' + order.map(function (s) { return s + ' (' + miss[s] + '문제)'; }).join(', ')));
+
+  rv.appendChild(mk('h2', '', '이번 회차 틀린 문제 살펴보기'));
+  wrong.forEach(function (d) {
+    var c = mk('div', 'wc');
+    c.appendChild(mk('span', 'tag', d.st + ' · ' + (d.k === '사실' ? '사실 질문' : '확장 질문')));
+    c.appendChild(mk('p', 'q', d.q));
+    var a = mk('div', 'mine'); a.appendChild(mk('b', '', '내가 고른 답')); a.appendChild(mk('span', '', d.chosen)); c.appendChild(a);
+    var b = mk('div', 'right'); b.appendChild(mk('b', '', '정답')); b.appendChild(mk('span', '', d.correct)); c.appendChild(b);
+    rv.appendChild(c);
+  });
+}
+</script>
+</body>
+</html>
